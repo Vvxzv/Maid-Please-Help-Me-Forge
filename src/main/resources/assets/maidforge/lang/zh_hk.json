@@ -1,0 +1,5 @@
+{
+  "task.maidforge.anvil_forge_task": "鍛造",
+  "task.maidforge.anvil_forge_task.desc": "女僕會幫你在砧上鍛造",
+  "task.maidforge.anvil_forge_task.condition.has_hammer": "主手持有錘子"
+}

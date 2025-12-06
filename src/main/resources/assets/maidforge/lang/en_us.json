@@ -1,0 +1,5 @@
+{
+  "task.maidforge.anvil_forge_task": "Forge",
+  "task.maidforge.anvil_forge_task.desc": "The maid will help you forge on the anvil.",
+  "task.maidforge.anvil_forge_task.condition.has_hammer": "Holding a hammer in the main hand."
+}
