@@ -64,20 +64,33 @@ public class ForgeUtil {
                     case "last":
                         lastSteps[0] = adjustedRule.step;
                         break;
-                    case "any", "not_last":
-                        fillEmptyLastSteps(rules, lastSteps, adjustedRule.step);
+                    case "not_last":
+                        notLastLastSteps(rules, lastSteps, adjustedRule.step);
                         break;
+                    case "any":
+                        anyLastSteps(rules, lastSteps, adjustedRule.step);
                 }
             }
             return lastSteps;
         }
 
-        private static void fillEmptyLastSteps(ForgeRule[] rules, ForgeStep[] lastSteps, ForgeStep step) {
+        private static void notLastLastSteps(ForgeRule[] rules, ForgeStep[] lastSteps, ForgeStep step) {
             if (lastSteps[2] == null && rules.length > 2) {
                 lastSteps[2] = step;
-            } else if (lastSteps[1] == null && rules.length > 1) {
+            }
+            else if (lastSteps[1] == null && rules.length > 1) {
                 lastSteps[1] = step;
-            } else if (lastSteps[0] == null) {
+            }
+        }
+
+        private static void anyLastSteps(ForgeRule[] rules, ForgeStep[] lastSteps, ForgeStep step) {
+            if (lastSteps[2] == null && rules.length > 2) {
+                lastSteps[2] = step;
+            }
+            else if (lastSteps[1] == null && rules.length > 1) {
+                lastSteps[1] = step;
+            }
+            else if (lastSteps[0] == null) {
                 lastSteps[0] = step;
             }
         }

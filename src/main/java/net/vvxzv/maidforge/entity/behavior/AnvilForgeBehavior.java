@@ -8,10 +8,10 @@ import com.mojang.authlib.GameProfile;
 import net.dries007.tfc.common.TFCTags;
 import net.dries007.tfc.common.blockentities.AnvilBlockEntity;
 import net.dries007.tfc.common.blocks.devices.AnvilBlock;
+import net.dries007.tfc.common.blocks.rock.RockAnvilBlock;
 import net.dries007.tfc.common.capabilities.forge.ForgeRule;
 import net.dries007.tfc.common.capabilities.forge.ForgeStep;
 import net.dries007.tfc.common.capabilities.forge.Forging;
-import net.dries007.tfc.common.capabilities.heat.HeatCapability;
 import net.dries007.tfc.common.recipes.AnvilRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -64,7 +64,7 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
                     return true;
                 }
 
-                BehaviorUtils.setWalkAndLookTargetMemories(maid, anvilPos, speed, 1);
+                BehaviorUtils.setWalkAndLookTargetMemories(maid, anvilPos, speed, 2);
                 this.setNextCheckTickCount(5);
             } else {
                 maid.getBrain().eraseMemory(InitEntities.TARGET_POS.get());
@@ -103,14 +103,17 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
             }
             AnvilRecipe recipe = forging.getRecipe(anvilBlockEntity.getLevel());
             if (recipe != null) {
+                entityMaid.swing(InteractionHand.MAIN_HAND);
+
                 ForgeRule[] rules = recipe.getRules();
                 ForgeStep[] lastSteps = ForgeUtil.AdjustedForgeRule.autoLastSteps(rules);
+
                 int last = lastSteps[0] != null? lastSteps[0].step(): 0;
                 int secondLast = lastSteps[1] != null? lastSteps[1].step(): 0;
                 int thirdLast = lastSteps[2] != null? lastSteps[2].step(): 0;
-                int targetWorkWithoutLastThreeSteps = targetWork - last - secondLast - thirdLast;
-                if(targetWorkWithoutLastThreeSteps - currentWork == 0){
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
+                int delta = targetWork - last - secondLast - thirdLast - currentWork;
+
+                if(delta == 0){
                     int Favorability = entityMaid.getFavorability();
                     double randomNum = Math.random();
                     if(Favorability < getPerfectForgeFavorability(4) && randomNum < 0.1){
@@ -130,149 +133,147 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
                         return;
                     }
                     if(thirdLast != 0) {
-                        //anvilBlockEntity.workRemotely(lastSteps[2], thirdLast, false);
                         anvilBlockEntity.work(player, lastSteps[2]);
                     }
                     if(secondLast != 0) {
-                        //anvilBlockEntity.workRemotely(lastSteps[1], secondLast, false);
                         anvilBlockEntity.work(player, lastSteps[1]);
                     }
                     if(last != 0) {
-                        //anvilBlockEntity.workRemotely(lastSteps[0], last, false);
                         anvilBlockEntity.work(player, lastSteps[0]);
                     }
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == -3){
+                else if(delta == -3){
                     // -3
-                    //anvilBlockEntity.workRemotely(ForgeStep.HIT_LIGHT, ForgeStep.HIT_LIGHT.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.HIT_LIGHT);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == -6){
+                else if(delta == -6){
                     // -6
-                    //anvilBlockEntity.workRemotely(ForgeStep.HIT_MEDIUM, ForgeStep.HIT_MEDIUM.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.HIT_MEDIUM);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == -9){
+                else if(delta == -9){
                     // -9
-                    //anvilBlockEntity.workRemotely(ForgeStep.HIT_HARD, ForgeStep.HIT_HARD.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.HIT_HARD);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork < 0){
+                else if(delta < 0){
                     // -15
-                    //anvilBlockEntity.workRemotely(ForgeStep.DRAW, ForgeStep.DRAW.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.DRAW);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork >= 16){
+                else if(delta == 40){
+                    // 13 + 13 + 7 + 7
+                    // 13 + [27]
+                    anvilBlockEntity.work(player, ForgeStep.UPSET);
+                }
+                else if(delta == 33){
+                    // 13 + 13 + 7
+                    // 13 + [20]
+                    anvilBlockEntity.work(player, ForgeStep.UPSET);
+                }
+                else if(delta == 28){
+                    // 13 + 13 + 2
+                    // 13 + [15]
+                    anvilBlockEntity.work(player, ForgeStep.UPSET);
+                }
+                else if(delta == 27){
+                    // 13 + 7 + 7
+                    // 13 + [14]
+                    anvilBlockEntity.work(player, ForgeStep.UPSET);
+                }
+                else if(delta == 26){
+                    // 13 + 13
+                    // 13 + [13]
+                    anvilBlockEntity.work(player, ForgeStep.UPSET);
+                }
+                else if(delta == 22){
+                    // 13 + 7 + 2
+                    // 13 + [9]
+                    anvilBlockEntity.work(player, ForgeStep.UPSET);
+                }
+                else if(delta == 21){
+                    // 7 + 7 + 7
+                    // 7 + [14]
+                    anvilBlockEntity.work(player, ForgeStep.BEND);
+                }
+                else if(delta == 20){
+                    // 13 + 7
+                    // 13 + [7]
+                    anvilBlockEntity.work(player, ForgeStep.UPSET);
+                }
+                else if(delta >= 16){
                     // 16
-                    //anvilBlockEntity.workRemotely(ForgeStep.SHRINK, ForgeStep.SHRINK.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.SHRINK);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 15){
+                else if(delta == 15){
                     // 13 + 2
                     // 13 + [2]
-                    //anvilBlockEntity.workRemotely(ForgeStep.UPSET, ForgeStep.UPSET.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.UPSET);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 14){
+                else if(delta == 14){
                     // 7 + 7
                     // 7 + [7]
-                    //anvilBlockEntity.workRemotely(ForgeStep.BEND, ForgeStep.BEND.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.BEND);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 13){
+                else if(delta == 13){
                     // 13
-                    //anvilBlockEntity.workRemotely(ForgeStep.UPSET, ForgeStep.UPSET.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.UPSET);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 12){
+                else if(delta == 12){
                     // -3 + 13 + 2
                     // -3 + [15]
-                    //anvilBlockEntity.workRemotely(ForgeStep.HIT_LIGHT, ForgeStep.HIT_LIGHT.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.HIT_LIGHT);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 11){
+                else if(delta == 11){
                     // 7 + 2 + 2
                     // 7 + [4]
-                    //anvilBlockEntity.workRemotely(ForgeStep.BEND, ForgeStep.BEND.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.BEND);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 10){
+                else if(delta == 10){
                     // -6 + 16
                     // -6 + [16]
-                    //anvilBlockEntity.workRemotely(ForgeStep.HIT_MEDIUM, ForgeStep.HIT_MEDIUM.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.HIT_MEDIUM);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 9){
+                else if(delta == 9){
                     // 7 + 2
                     // 7 + [2]
-                    //anvilBlockEntity.workRemotely(ForgeStep.BEND, ForgeStep.BEND.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.BEND);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 8){
+                else if(delta == 8){
                     // -6 + 7 + 7
                     // -6 + [14]
-                    //anvilBlockEntity.workRemotely(ForgeStep.HIT_MEDIUM, ForgeStep.HIT_MEDIUM.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.HIT_MEDIUM);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 7){
+                else if(delta == 7){
                     // 7
-                    //anvilBlockEntity.workRemotely(ForgeStep.BEND, ForgeStep.BEND.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.BEND);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 6){
+                else if(delta == 6){
                     // 2 + 2 + 2
                     // 2 + [4]
-                    //anvilBlockEntity.workRemotely(ForgeStep.PUNCH, ForgeStep.PUNCH.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.PUNCH);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 5){
+                else if(delta == 5){
                     // -6 + 7 + 2 + 2
                     // -6 + [11]
-                    //anvilBlockEntity.workRemotely(ForgeStep.HIT_MEDIUM, ForgeStep.HIT_MEDIUM.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.HIT_MEDIUM);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 4){
+                else if(delta == 4){
                     // 2 + 2
                     // 2 + [2]
-                    //anvilBlockEntity.workRemotely(ForgeStep.PUNCH, ForgeStep.PUNCH.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.PUNCH);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 3){
+                else if(delta == 3){
                     // -6 + 7 + 2
                     // -6 + [9]
-                    //anvilBlockEntity.workRemotely(ForgeStep.BEND, ForgeStep.BEND.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.BEND);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 2){
+                else if(delta == 2){
                     // 2
-                    //anvilBlockEntity.workRemotely(ForgeStep.PUNCH, ForgeStep.PUNCH.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.PUNCH);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
-                else if(targetWorkWithoutLastThreeSteps - currentWork == 1){
+                else {
+                    // delta == 1
                     // -15 + 16
                     // -15 + [16]
-                    //anvilBlockEntity.workRemotely(ForgeStep.DRAW, ForgeStep.DRAW.step(), false);
                     anvilBlockEntity.work(player, ForgeStep.DRAW);
-                    entityMaid.swing(InteractionHand.MAIN_HAND);
                 }
             }
         }
@@ -287,7 +288,7 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
                 for (int z = -range; z <= range; z++) {
                     BlockPos currentPos = blockPos.offset(x, y, z);
                     BlockState state = world.getBlockState(currentPos);
-                    if (state.getBlock() instanceof AnvilBlock) {
+                    if (state.getBlock() instanceof AnvilBlock || state.getBlock() instanceof RockAnvilBlock) {
                         return currentPos;
                     }
                 }

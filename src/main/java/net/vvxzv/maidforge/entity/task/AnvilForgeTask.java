@@ -20,6 +20,7 @@ import java.util.function.Predicate;
 
 public class AnvilForgeTask implements IMaidTask {
     @Override
+    @SuppressWarnings("removal")
     public ResourceLocation getUid() {
         return new ResourceLocation(MaidForge.MODID, "anvil_forge_task");
     }
