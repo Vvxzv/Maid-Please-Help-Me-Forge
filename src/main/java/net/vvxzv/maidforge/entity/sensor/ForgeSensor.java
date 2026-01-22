@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
-public class ForgeSensor extends Sensor<EntityMaid> {
+public class ForgeSensor extends Sensor<EntityMaid>  {
     private static final int scanRate = 100;
 
     public ForgeSensor() {

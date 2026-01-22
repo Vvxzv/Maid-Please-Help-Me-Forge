@@ -1,8 +1,10 @@
 package net.vvxzv.maidforge.utils;
 
-import net.dries007.tfc.common.capabilities.forge.ForgeRule;
-import net.dries007.tfc.common.capabilities.forge.ForgeStep;
+import net.dries007.tfc.common.component.forge.ForgeRule;
+import net.dries007.tfc.common.component.forge.ForgeStep;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class ForgeUtil {
     public enum AdjustedForgeRule {
@@ -50,7 +52,7 @@ public class ForgeUtil {
             this.step = step;
         }
 
-        public static ForgeStep[] autoLastSteps(ForgeRule[] rules){
+        public static ForgeStep[] autoLastSteps(List<ForgeRule> rules){
             ForgeStep[] lastSteps = new ForgeStep[]{null, null, null};
             for(ForgeRule rule : rules) {
                 AdjustedForgeRule adjustedRule = AdjustedForgeRule.valueOf(rule.ordinal());
@@ -74,20 +76,20 @@ public class ForgeUtil {
             return lastSteps;
         }
 
-        private static void notLastLastSteps(ForgeRule[] rules, ForgeStep[] lastSteps, ForgeStep step) {
-            if (lastSteps[2] == null && rules.length > 2) {
+        private static void notLastLastSteps(List<ForgeRule> rules, ForgeStep[] lastSteps, ForgeStep step) {
+            if (lastSteps[2] == null && rules.size() > 2) {
                 lastSteps[2] = step;
             }
-            else if (lastSteps[1] == null && rules.length > 1) {
+            else if (lastSteps[1] == null && rules.size() > 1) {
                 lastSteps[1] = step;
             }
         }
 
-        private static void anyLastSteps(ForgeRule[] rules, ForgeStep[] lastSteps, ForgeStep step) {
-            if (lastSteps[2] == null && rules.length > 2) {
+        private static void anyLastSteps(List<ForgeRule> rules, ForgeStep[] lastSteps, ForgeStep step) {
+            if (lastSteps[2] == null && rules.size() > 2) {
                 lastSteps[2] = step;
             }
-            else if (lastSteps[1] == null && rules.length > 1) {
+            else if (lastSteps[1] == null && rules.size() > 1) {
                 lastSteps[1] = step;
             }
             else if (lastSteps[0] == null) {

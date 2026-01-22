@@ -9,7 +9,6 @@ import net.vvxzv.maidforge.entity.task.AnvilForgeTask;
 
 @LittleMaidExtension
 public class MaidPlugin implements ILittleMaid {
-
     @Override
     public void addMaidTask(TaskManager manager) {
         manager.add(new AnvilForgeTask());

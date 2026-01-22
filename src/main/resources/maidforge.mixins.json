@@ -2,9 +2,9 @@
   "required" : true,
   "minVersion" : "0.8",
   "package" : "net.vvxzv.maidforge.mixin",
-  "compatibilityLevel" : "JAVA_8",
-  "refmap" : "maidforge.refmap.json",
+  "compatibilityLevel" : "JAVA_21",
   "mixins" : [
+    "AnvilBlockEntityMixin"
   ],
   "client" : [
   ],

@@ -2,6 +2,8 @@ package net.vvxzv.maidforge.entity.task;
 
 import com.github.tartaricacid.touhoulittlemaid.api.task.IMaidTask;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.github.tartaricacid.touhoulittlemaid.init.InitSounds;
+import com.github.tartaricacid.touhoulittlemaid.util.SoundUtil;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
 import net.dries007.tfc.common.TFCTags;
@@ -20,24 +22,23 @@ import java.util.function.Predicate;
 
 public class AnvilForgeTask implements IMaidTask {
     @Override
-    @SuppressWarnings("removal")
     public ResourceLocation getUid() {
-        return new ResourceLocation(MaidForge.MODID, "anvil_forge_task");
+        return ResourceLocation.fromNamespaceAndPath(MaidForge.MODID, "anvil_forge_task");
     }
 
     @Override
     public ItemStack getIcon() {
-        return TFCItems.METAL_ITEMS.get(Metal.Default.WROUGHT_IRON).get(Metal.ItemType.HAMMER).get().getDefaultInstance();
+        return TFCItems.METAL_ITEMS.get(Metal.WROUGHT_IRON).get(Metal.ItemType.HAMMER).get().getDefaultInstance();
     }
 
     @Override
     public @Nullable SoundEvent getAmbientSound(EntityMaid entityMaid) {
-        return null;
+        return SoundUtil.environmentSound(entityMaid, InitSounds.MAID_IDLE.get(), 0.5F);
     }
 
     @Override
     public List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createBrainTasks(EntityMaid entityMaid) {
-        return Lists.newArrayList(Pair.of(5, new AnvilForgeBehavior()));
+        return Lists.newArrayList(new Pair[]{Pair.of(5, new AnvilForgeBehavior())});
     }
 
     @Override
@@ -46,6 +47,6 @@ public class AnvilForgeTask implements IMaidTask {
     }
 
     private boolean hasHammer(EntityMaid maid){
-        return maid.getMainHandItem().is(TFCTags.Items.HAMMERS);
+        return maid.getMainHandItem().is(TFCTags.Items.TOOLS_HAMMER);
     }
 }
