@@ -12,6 +12,7 @@ import net.vvxzv.maidforge.entity.sensor.SensorRegistry;
 public class MaidForge {
     public static final String MODID = "maidforge";
 
+    @SuppressWarnings("removal")
     public MaidForge() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         SensorRegistry.SENSOR.register(modEventBus);

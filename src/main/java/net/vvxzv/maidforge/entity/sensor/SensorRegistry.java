@@ -7,11 +7,7 @@ import net.minecraftforge.registries.RegistryObject;
 import net.vvxzv.maidforge.MaidForge;
 
 public class SensorRegistry {
-    public static final DeferredRegister<SensorType<?>> SENSOR;
-    public static RegistryObject<SensorType<ForgeSensor>> ANVIL_FORGE_SENSOR;
+    public static final DeferredRegister<SensorType<?>> SENSOR = DeferredRegister.create(ForgeRegistries.SENSOR_TYPES, MaidForge.MODID);
 
-    static {
-        SENSOR = DeferredRegister.create(ForgeRegistries.SENSOR_TYPES, MaidForge.MODID);
-        ANVIL_FORGE_SENSOR = SENSOR.register("anvil_forge_sensor", () -> new SensorType<>(ForgeSensor::new));
-    }
+    public static RegistryObject<SensorType<ForgeSensor>> ANVIL_FORGE_SENSOR = SENSOR.register("anvil_forge_sensor", () -> new SensorType<>(ForgeSensor::new));
 }
