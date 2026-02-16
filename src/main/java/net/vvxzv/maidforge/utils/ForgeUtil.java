@@ -4,7 +4,9 @@ import net.dries007.tfc.common.component.forge.ForgeRule;
 import net.dries007.tfc.common.component.forge.ForgeStep;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ForgeUtil {
     public enum AdjustedForgeRule {
@@ -96,5 +98,48 @@ public class ForgeUtil {
                 lastSteps[0] = step;
             }
         }
+    }
+
+    private static final Map<Integer, ForgeStep> DELTA_TO_FORGE_STEP = new HashMap<>();
+    static {
+        DELTA_TO_FORGE_STEP.put(-3, ForgeStep.HIT_LIGHT);
+        DELTA_TO_FORGE_STEP.put(-6, ForgeStep.HIT_MEDIUM);
+        DELTA_TO_FORGE_STEP.put(-9, ForgeStep.HIT_HARD);
+        DELTA_TO_FORGE_STEP.put(40, ForgeStep.UPSET);       // 13 + 13 + 7 + 7; 13 + [27]
+        DELTA_TO_FORGE_STEP.put(33, ForgeStep.UPSET);       // 13 + 13 + 7; 13 + [20]
+        DELTA_TO_FORGE_STEP.put(28, ForgeStep.UPSET);       // 13 + 13 + 2; 13 + [15]
+        DELTA_TO_FORGE_STEP.put(27, ForgeStep.UPSET);       // 13 + 7 + 7; 13 + [14]
+        DELTA_TO_FORGE_STEP.put(26, ForgeStep.UPSET);       // 13 + 13; 13 + [13]
+        DELTA_TO_FORGE_STEP.put(22, ForgeStep.UPSET);       // 13 + 7 + 2; 13 + [9]
+        DELTA_TO_FORGE_STEP.put(21, ForgeStep.BEND);        // 7 + 7 + 7; 7 + [14]
+        DELTA_TO_FORGE_STEP.put(20, ForgeStep.UPSET);       // 13 + 7; 13 + [7]
+        DELTA_TO_FORGE_STEP.put(15, ForgeStep.UPSET);       // 13 + 2; 13 + [2]
+        DELTA_TO_FORGE_STEP.put(14, ForgeStep.BEND);        // 7 + 7; 7 + [7]
+        DELTA_TO_FORGE_STEP.put(13, ForgeStep.UPSET);
+        DELTA_TO_FORGE_STEP.put(12, ForgeStep.HIT_LIGHT);   // -3 + 13 + 2; -3 + [15]
+        DELTA_TO_FORGE_STEP.put(11, ForgeStep.BEND);        // 7 + 2 + 2; 7 + [4]
+        DELTA_TO_FORGE_STEP.put(10, ForgeStep.HIT_MEDIUM);  // -6 + 16; -6 + [16]
+        DELTA_TO_FORGE_STEP.put(9, ForgeStep.BEND);         // 7 + 2; 7 + [2]
+        DELTA_TO_FORGE_STEP.put(8, ForgeStep.HIT_MEDIUM);   // -6 + 7 + 7; -6 + [7]
+        DELTA_TO_FORGE_STEP.put(7, ForgeStep.BEND);
+        DELTA_TO_FORGE_STEP.put(6, ForgeStep.PUNCH);        // 2 + 2 + 2; 2 + [4]
+        DELTA_TO_FORGE_STEP.put(5, ForgeStep.HIT_MEDIUM);   // -6 + 7 + 2 + 2; -6 + [9]
+        DELTA_TO_FORGE_STEP.put(4, ForgeStep.PUNCH);        // 2 + 2; 2 + [2]
+        DELTA_TO_FORGE_STEP.put(3, ForgeStep.BEND);         // -6 + 7 + 2; -6 + [9]
+        DELTA_TO_FORGE_STEP.put(2, ForgeStep.PUNCH);
+        DELTA_TO_FORGE_STEP.put(1, ForgeStep.DRAW);         // -15 + 16; -15 + [16]
+    }
+
+    public static ForgeStep findForgeStep(int delta){
+        ForgeStep forgeStep = DELTA_TO_FORGE_STEP.get(delta);
+        if(forgeStep == null){
+            if (delta < 0) {
+                forgeStep = ForgeStep.DRAW;
+            }
+            else if (delta >= 16) {
+                forgeStep = ForgeStep.SHRINK;
+            }
+        }
+        return forgeStep;
     }
 }
