@@ -1,7 +1,6 @@
 package net.vvxzv.maidforge.entity.behavior;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidCheckRateTask;
-import com.github.tartaricacid.touhoulittlemaid.entity.chatbubble.implement.TextChatBubbleData;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitEntities;
 import com.google.common.collect.ImmutableMap;
@@ -10,7 +9,6 @@ import net.dries007.tfc.common.TFCTags;
 import net.dries007.tfc.common.blockentities.AnvilBlockEntity;
 import net.dries007.tfc.common.blocks.devices.AnvilBlock;
 import net.dries007.tfc.common.blocks.rock.RockAnvilBlock;
-import net.dries007.tfc.common.capabilities.forge.ForgeRule;
 import net.dries007.tfc.common.capabilities.forge.ForgeStep;
 import net.dries007.tfc.common.capabilities.forge.Forging;
 import net.dries007.tfc.common.recipes.AnvilRecipe;
@@ -39,7 +37,7 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
     private static final UUID uuid = UUID.randomUUID();
 
     private int getPerfectForgeFavorability(int stage){
-        return Config.perfectForgeFavorability * stage / 4;
+        return Config.favorabilityToPerfectForge * stage / 4;
     }
 
     
@@ -88,212 +86,100 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
         entityMaid.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
     }
 
-    private void forgeEvent(AnvilBlockEntity anvilBlockEntity, EntityMaid entityMaid){
+    private void forgeEvent(AnvilBlockEntity anvilBlockEntity, EntityMaid entityMaid) {
         ItemStack hammer = entityMaid.getMainHandItem();
-        if(!hammer.is(TFCTags.Items.HAMMERS)) return;
+        if (!hammer.is(TFCTags.Items.HAMMERS)) return;
 
-        ServerPlayer player = new FakePlayer((ServerLevel) anvilBlockEntity.getLevel(), new GameProfile(uuid, "Maid"));
-        player.setItemInHand(InteractionHand.MAIN_HAND, hammer);
+        ServerPlayer fakePlayer = createFakePlayer(anvilBlockEntity, hammer);
+        if (fakePlayer == null) return;
 
         Forging forging = anvilBlockEntity.getMainInputForging();
-        if (forging != null) {
-            int currentWork = forging.getWork();
-            int targetWork = forging.getWorkTarget();
-            if (targetWork == 0) {
-                return;
+        if (forging == null || forging.getWorkTarget() == 0) return;
+
+        AnvilRecipe recipe = forging.getRecipe(anvilBlockEntity.getLevel());
+        if (recipe == null) return;
+
+        int currentWork = forging.getWork();
+        int targetWork = forging.getWorkTarget();
+        ForgeStep[] lastSteps = ForgeUtil.AdjustedForgeRule.autoLastSteps(recipe.getRules());
+        int last = getStepValue(lastSteps, 0);
+        int secondLast = getStepValue(lastSteps, 1);
+        int thirdLast = getStepValue(lastSteps, 2);
+        int delta = targetWork - last - secondLast - thirdLast - currentWork;
+
+        if (delta == 0) {
+            handleAlign(anvilBlockEntity, fakePlayer, entityMaid, lastSteps);
+            return;
+        }
+
+        anvilWork(anvilBlockEntity, fakePlayer, ForgeUtil.findForgeStep(delta), entityMaid);
+    }
+
+    private ServerPlayer createFakePlayer(AnvilBlockEntity anvilBlockEntity, ItemStack hammer) {
+        try {
+            ServerLevel level = (ServerLevel) anvilBlockEntity.getLevel();
+            GameProfile profile = new GameProfile(uuid, "Maid");
+            ServerPlayer fakePlayer = new FakePlayer(level, profile);
+            fakePlayer.setItemInHand(InteractionHand.MAIN_HAND, hammer);
+            return fakePlayer;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private int getStepValue(ForgeStep[] lastSteps, int index) {
+        return index < lastSteps.length && lastSteps[index] != null ? lastSteps[index].step() : 0;
+    }
+
+    private void handleAlign(AnvilBlockEntity anvilBlockEntity, ServerPlayer player, EntityMaid entityMaid, ForgeStep[] lastSteps) {
+        int favorability = entityMaid.getFavorability();
+        double randomNum = Math.random();
+
+        if (favorability < getPerfectForgeFavorability(4) && randomNum < 0.2) {
+            anvilWork(anvilBlockEntity, player, ForgeStep.DRAW, entityMaid);
+        } else if (favorability < getPerfectForgeFavorability(3) && randomNum < 0.4) {
+            anvilWork(anvilBlockEntity, player, ForgeStep.HIT_HARD, entityMaid);
+        } else if (favorability < getPerfectForgeFavorability(2) && randomNum < 0.6) {
+            anvilWork(anvilBlockEntity, player, ForgeStep.HIT_MEDIUM, entityMaid);
+        } else if (favorability < getPerfectForgeFavorability(1) && randomNum < 0.8) {
+            anvilWork(anvilBlockEntity, player, ForgeStep.HIT_LIGHT, entityMaid);
+        } else {
+            if (getStepValue(lastSteps, 2) != 0) {
+                anvilWork(anvilBlockEntity, player, lastSteps[2], entityMaid);
             }
-            AnvilRecipe recipe = forging.getRecipe(anvilBlockEntity.getLevel());
-            if (recipe != null) {
-                ForgeRule[] rules = recipe.getRules();
-                ForgeStep[] lastSteps = ForgeUtil.AdjustedForgeRule.autoLastSteps(rules);
-
-                int last = lastSteps[0] != null? lastSteps[0].step(): 0;
-                int secondLast = lastSteps[1] != null? lastSteps[1].step(): 0;
-                int thirdLast = lastSteps[2] != null? lastSteps[2].step(): 0;
-                int delta = targetWork - last - secondLast - thirdLast - currentWork;
-
-                if(delta == 0){
-                    int Favorability = entityMaid.getFavorability();
-                    double randomNum = Math.random();
-                    if(Favorability < getPerfectForgeFavorability(4) && randomNum < 0.1){
-                        anvilWork(anvilBlockEntity, player, ForgeStep.DRAW, entityMaid);
-                        return;
-                    }
-                    if(Favorability < getPerfectForgeFavorability(3) && randomNum < 0.2){
-                        anvilWork(anvilBlockEntity, player, ForgeStep.HIT_HARD, entityMaid);
-                        return;
-                    }
-                    if(Favorability < getPerfectForgeFavorability(2) && randomNum < 0.3){
-                        anvilWork(anvilBlockEntity, player, ForgeStep.HIT_MEDIUM, entityMaid);
-                        return;
-                    }
-                    if(Favorability < getPerfectForgeFavorability(1) && randomNum < 0.4){
-                        anvilWork(anvilBlockEntity, player, ForgeStep.HIT_LIGHT, entityMaid);
-                        return;
-                    }
-                    if(thirdLast != 0) {
-                        anvilWork(anvilBlockEntity, player, lastSteps[2], entityMaid);
-                    }
-                    if(secondLast != 0) {
-                        anvilWork(anvilBlockEntity, player, lastSteps[1], entityMaid);
-                    }
-                    if(last != 0) {
-                        anvilWork(anvilBlockEntity, player, lastSteps[0], entityMaid);
-                    }
-                }
-                else if(delta == -3){
-                    // -3
-                    anvilWork(anvilBlockEntity, player, ForgeStep.HIT_LIGHT, entityMaid);
-                }
-                else if(delta == -6){
-                    // -6
-                    anvilWork(anvilBlockEntity, player, ForgeStep.HIT_MEDIUM, entityMaid);
-                }
-                else if(delta == -9){
-                    // -9
-                    anvilWork(anvilBlockEntity, player, ForgeStep.HIT_HARD, entityMaid);
-                }
-                else if(delta < 0){
-                    // -15
-                    anvilWork(anvilBlockEntity, player, ForgeStep.DRAW, entityMaid);
-                }
-                else if(delta == 40){
-                    // 13 + 13 + 7 + 7
-                    // 13 + [27]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta == 33){
-                    // 13 + 13 + 7
-                    // 13 + [20]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta == 28){
-                    // 13 + 13 + 2
-                    // 13 + [15]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta == 27){
-                    // 13 + 7 + 7
-                    // 13 + [14]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta == 26){
-                    // 13 + 13
-                    // 13 + [13]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta == 22){
-                    // 13 + 7 + 2
-                    // 13 + [9]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta == 21){
-                    // 7 + 7 + 7
-                    // 7 + [14]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.BEND, entityMaid);
-                }
-                else if(delta == 20){
-                    // 13 + 7
-                    // 13 + [7]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta >= 16){
-                    // 16
-                    anvilWork(anvilBlockEntity, player, ForgeStep.SHRINK, entityMaid);
-                }
-                else if(delta == 15){
-                    // 13 + 2
-                    // 13 + [2]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta == 14){
-                    // 7 + 7
-                    // 7 + [7]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.BEND, entityMaid);
-                }
-                else if(delta == 13){
-                    // 13
-                    anvilWork(anvilBlockEntity, player, ForgeStep.UPSET, entityMaid);
-                }
-                else if(delta == 12){
-                    // -3 + 13 + 2
-                    // -3 + [15]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.HIT_LIGHT, entityMaid);
-                }
-                else if(delta == 11){
-                    // 7 + 2 + 2
-                    // 7 + [4]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.BEND, entityMaid);
-                }
-                else if(delta == 10){
-                    // -6 + 16
-                    // -6 + [16]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.HIT_MEDIUM, entityMaid);
-                }
-                else if(delta == 9){
-                    // 7 + 2
-                    // 7 + [2]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.BEND, entityMaid);
-                }
-                else if(delta == 8){
-                    // -6 + 7 + 7
-                    // -6 + [14]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.HIT_MEDIUM, entityMaid);
-                }
-                else if(delta == 7){
-                    // 7
-                    anvilWork(anvilBlockEntity, player, ForgeStep.BEND, entityMaid);
-                }
-                else if(delta == 6){
-                    // 2 + 2 + 2
-                    // 2 + [4]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.PUNCH, entityMaid);
-                }
-                else if(delta == 5){
-                    // -6 + 7 + 2 + 2
-                    // -6 + [11]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.HIT_MEDIUM, entityMaid);
-                }
-                else if(delta == 4){
-                    // 2 + 2
-                    // 2 + [2]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.PUNCH, entityMaid);
-                }
-                else if(delta == 3){
-                    // -6 + 7 + 2
-                    // -6 + [9]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.BEND, entityMaid);
-                }
-                else if(delta == 2){
-                    // 2
-                    anvilWork(anvilBlockEntity, player, ForgeStep.PUNCH, entityMaid);
-                }
-                else {
-                    // delta == 1
-                    // -15 + 16
-                    // -15 + [16]
-                    anvilWork(anvilBlockEntity, player, ForgeStep.DRAW, entityMaid);
-                }
+            if (getStepValue(lastSteps, 1) != 0) {
+                anvilWork(anvilBlockEntity, player, lastSteps[1], entityMaid);
+            }
+            if (getStepValue(lastSteps, 0) != 0) {
+                anvilWork(anvilBlockEntity, player, lastSteps[0], entityMaid);
             }
         }
     }
 
-    private BlockPos findAnvil(ServerLevel world, EntityMaid maid){
-        BlockPos blockPos = maid.getBrainSearchPos();
+    private BlockPos findAnvil(ServerLevel world, EntityMaid maid) {
+        BlockPos centerPos = maid.getBrainSearchPos();
         int range = (int) maid.getRestrictRadius();
+
+        BlockPos nearestAnvil = null;
+        double minDistanceSquared = Double.MAX_VALUE;
 
         for (int x = -range; x <= range; x++) {
             for (int y = -range; y <= range; y++) {
                 for (int z = -range; z <= range; z++) {
-                    BlockPos currentPos = blockPos.offset(x, y, z);
+                    BlockPos currentPos = centerPos.offset(x, y, z);
                     BlockState state = world.getBlockState(currentPos);
                     if (state.getBlock() instanceof AnvilBlock || state.getBlock() instanceof RockAnvilBlock) {
-                        return currentPos;
+                        double distanceSquared = centerPos.distSqr(currentPos);
+                        if (distanceSquared < minDistanceSquared) {
+                            minDistanceSquared = distanceSquared;
+                            nearestAnvil = currentPos;
+                        }
                     }
                 }
             }
         }
-        return null;
+        return nearestAnvil;
     }
 
     private static void anvilWork(AnvilBlockEntity anvilBlockEntity, ServerPlayer player, ForgeStep step, EntityMaid entityMaid){
