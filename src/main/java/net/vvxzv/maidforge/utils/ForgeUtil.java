@@ -2,7 +2,6 @@ package net.vvxzv.maidforge.utils;
 
 import net.dries007.tfc.common.capabilities.forge.ForgeRule;
 import net.dries007.tfc.common.capabilities.forge.ForgeStep;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,8 +43,8 @@ public class ForgeUtil {
         private final ForgeStep step;
         private static final AdjustedForgeRule[] VALUES = values();
 
-        public static @Nullable AdjustedForgeRule valueOf(int id) {
-            return id >= 0 && id < VALUES.length ? VALUES[id] : null;
+        public static AdjustedForgeRule valueOf(int id) {
+            return VALUES[id];
         }
 
         AdjustedForgeRule(String lastForgeType, ForgeStep step){
@@ -105,6 +104,7 @@ public class ForgeUtil {
         DELTA_TO_FORGE_STEP.put(-6, ForgeStep.HIT_MEDIUM);
         DELTA_TO_FORGE_STEP.put(-9, ForgeStep.HIT_HARD);
         DELTA_TO_FORGE_STEP.put(40, ForgeStep.UPSET);       // 13 + 13 + 7 + 7; 13 + [27]
+        DELTA_TO_FORGE_STEP.put(35, ForgeStep.UPSET);       // 13 + 13 + 7 + 2; 13 + [22]
         DELTA_TO_FORGE_STEP.put(33, ForgeStep.UPSET);       // 13 + 13 + 7; 13 + [20]
         DELTA_TO_FORGE_STEP.put(28, ForgeStep.UPSET);       // 13 + 13 + 2; 13 + [15]
         DELTA_TO_FORGE_STEP.put(27, ForgeStep.UPSET);       // 13 + 7 + 7; 13 + [14]
