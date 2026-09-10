@@ -10,6 +10,7 @@ import net.minecraft.world.entity.ai.sensing.Sensor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.vvxzv.maidforge.entity.memory.MemoryRegistry;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -22,7 +23,7 @@ public class ForgeSensor extends Sensor<EntityMaid> {
     }
 
     @Override
-    protected void doTick(ServerLevel serverLevel, EntityMaid entityMaid) {
+    protected void doTick(@NotNull ServerLevel serverLevel, EntityMaid entityMaid) {
         AnvilBlockEntity anvilBlockEntity = null;
         BlockPos pos = entityMaid.getOnPos();
 
@@ -38,7 +39,7 @@ public class ForgeSensor extends Sensor<EntityMaid> {
     }
 
     @Override
-    public Set<MemoryModuleType<?>> requires() {
+    public @NotNull Set<MemoryModuleType<?>> requires() {
         return Set.of(MemoryRegistry.ANVIL_TARGET.get());
     }
 
