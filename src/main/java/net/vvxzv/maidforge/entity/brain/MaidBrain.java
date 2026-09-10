@@ -14,14 +14,14 @@ import java.util.List;
 public class MaidBrain implements IExtraMaidBrain {
     @Override
     public List<MemoryModuleType<?>> getExtraMemoryTypes() {
-        List<MemoryModuleType<?>> list = new ArrayList();
+        List<MemoryModuleType<?>> list = new ArrayList<>();
         list.add(MemoryRegistry.ANVIL_TARGET.get());
         return list;
     }
 
     @Override
     public List<SensorType<? extends Sensor<? super EntityMaid>>> getExtraSensorTypes() {
-        List<SensorType<? extends Sensor<? super EntityMaid>>> list = new ArrayList();
+        List<SensorType<? extends Sensor<? super EntityMaid>>> list = new ArrayList<>();
         list.add(SensorRegistry.ANVIL_FORGE_SENSOR.get());
         return list;
     }

@@ -15,6 +15,7 @@ import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.item.ItemStack;
 import net.vvxzv.maidforge.MaidForge;
 import net.vvxzv.maidforge.entity.behavior.AnvilForgeBehavior;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -22,27 +23,27 @@ import java.util.function.Predicate;
 
 public class AnvilForgeTask implements IMaidTask {
     @Override
-    public ResourceLocation getUid() {
+    public @NotNull ResourceLocation getUid() {
         return ResourceLocation.fromNamespaceAndPath(MaidForge.MODID, "anvil_forge_task");
     }
 
     @Override
-    public ItemStack getIcon() {
+    public @NotNull ItemStack getIcon() {
         return TFCItems.METAL_ITEMS.get(Metal.WROUGHT_IRON).get(Metal.ItemType.HAMMER).get().getDefaultInstance();
     }
 
     @Override
-    public @Nullable SoundEvent getAmbientSound(EntityMaid entityMaid) {
+    public @Nullable SoundEvent getAmbientSound(@NotNull EntityMaid entityMaid) {
         return SoundUtil.environmentSound(entityMaid, InitSounds.MAID_IDLE.get(), 0.5F);
     }
 
     @Override
-    public List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createBrainTasks(EntityMaid entityMaid) {
-        return Lists.newArrayList(new Pair[]{Pair.of(5, new AnvilForgeBehavior())});
+    public @NotNull List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createBrainTasks(@NotNull EntityMaid entityMaid) {
+        return Lists.newArrayList(Pair.of(5, new AnvilForgeBehavior()));
     }
 
     @Override
-    public List<Pair<String, Predicate<EntityMaid>>> getConditionDescription(EntityMaid maid) {
+    public @NotNull List<Pair<String, Predicate<EntityMaid>>> getConditionDescription(@NotNull EntityMaid maid) {
         return Lists.newArrayList(Pair.of("has_hammer", this::hasHammer));
     }
 

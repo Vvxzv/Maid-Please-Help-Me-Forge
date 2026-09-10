@@ -29,6 +29,7 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.vvxzv.maidforge.Config;
 import net.vvxzv.maidforge.entity.memory.MemoryRegistry;
 import net.vvxzv.maidforge.utils.ForgeUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +39,7 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
     private final float speed;
     private final int closeEnoughDist;
     private AnvilBlockEntity anvilBlockEntity;
-    private static final UUID uuid = UUID.randomUUID();
+    private static final GameProfile PROFILE = new GameProfile(UUID.randomUUID(), "Maid");
 
     private int getPerfectForgeFavorability(int stage){
         return Config.favorabilityToPerfectForge * stage / 4;
@@ -58,11 +59,11 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
     }
 
     @Override
-    protected boolean checkExtraStartConditions(ServerLevel worldIn, EntityMaid maid) {
+    protected boolean checkExtraStartConditions(@NotNull ServerLevel worldIn, @NotNull EntityMaid maid) {
         if (super.checkExtraStartConditions(worldIn, maid) && maid.canBrainMoving()) {
             BlockPos anvilPos = this.findAnvil(worldIn, maid);
             if (anvilPos != null && maid.isWithinRestriction(anvilPos)) {
-                if (anvilPos.distToCenterSqr(maid.position()) < Math.pow(closeEnoughDist, 2.0F)) {
+                if (anvilPos.distToCenterSqr(maid.position()) < Math.pow(closeEnoughDist, 2F)) {
                     maid.getBrain().setMemory(InitEntities.TARGET_POS.get(), new BlockPosTracker(anvilPos));
                     return true;
                 }
@@ -78,7 +79,7 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
     }
 
     @Override
-    protected void start(ServerLevel serverLevel, EntityMaid entityMaid, long gameTimeIn) {
+    protected void start(@NotNull ServerLevel serverLevel, EntityMaid entityMaid, long gameTimeIn) {
         entityMaid.getBrain().getMemory(MemoryRegistry.ANVIL_TARGET.get()).ifPresent((target) -> {
             BehaviorUtils.setWalkAndLookTargetMemories(entityMaid, target.getBlockPos(), speed, 2);
             this.anvilBlockEntity = target;
@@ -98,8 +99,9 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
         ItemStack hammer = entityMaid.getMainHandItem();
         if(!hammer.is(TFCTags.Items.TOOLS_HAMMER)) return;
 
-        ServerPlayer fakePlayer = createFakePlayer(anvilBlockEntity, hammer);
-        if (fakePlayer == null) return;
+        if(!(anvilBlockEntity.getLevel() instanceof ServerLevel level)) return;
+
+        ServerPlayer fakePlayer = createFakePlayer(level, hammer);
 
         Forging forging = anvilBlockEntity.getMainInputForging();
         int currentWork = forging.work();
@@ -123,20 +125,13 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
             handleAlign(anvilBlockEntity, fakePlayer, entityMaid, lastSteps);
             return;
         }
-        anvilBlockEntity.work(fakePlayer, ForgeUtil.findForgeStep(delta));
+        anvilBlockEntity.work(fakePlayer, ForgeUtil.findForgeStep(currentWork, delta));
     }
 
-    private ServerPlayer createFakePlayer(AnvilBlockEntity anvilBlockEntity, ItemStack hammer) {
-        try {
-            ServerLevel level = (ServerLevel) anvilBlockEntity.getLevel();
-            GameProfile profile = new GameProfile(uuid, "Maid");
-            ServerPlayer fakePlayer = new FakePlayer(level, profile);
-            fakePlayer.setItemInHand(InteractionHand.MAIN_HAND, hammer);
-            return fakePlayer;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    private ServerPlayer createFakePlayer(ServerLevel level, ItemStack hammer) {
+        ServerPlayer fakePlayer = new FakePlayer(level, PROFILE);
+        fakePlayer.setItemInHand(InteractionHand.MAIN_HAND, hammer);
+        return fakePlayer;
     }
 
     private int getStepValue(ForgeStep[] lastSteps, int index) {
@@ -147,13 +142,13 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
         int favorability = entityMaid.getFavorability();
         double randomNum = Math.random();
 
-        if (favorability < getPerfectForgeFavorability(4) && randomNum < 0.2) {
+        if (favorability < getPerfectForgeFavorability(4) && randomNum < 0.25) {
             anvilBlockEntity.work(player, ForgeStep.DRAW);
         } else if (favorability < getPerfectForgeFavorability(3) && randomNum < 0.4) {
             anvilBlockEntity.work(player, ForgeStep.HIT_HARD);
-        } else if (favorability < getPerfectForgeFavorability(2) && randomNum < 0.6) {
+        } else if (favorability < getPerfectForgeFavorability(2) && randomNum < 0.55) {
             anvilBlockEntity.work(player, ForgeStep.HIT_MEDIUM);
-        } else if (favorability < getPerfectForgeFavorability(1) && randomNum < 0.8) {
+        } else if (favorability < getPerfectForgeFavorability(1) && randomNum < 0.7) {
             anvilBlockEntity.work(player, ForgeStep.HIT_LIGHT);
         } else {
             if (getStepValue(lastSteps, 2) != 0) {
