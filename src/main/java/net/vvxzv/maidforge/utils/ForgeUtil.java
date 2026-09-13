@@ -3,7 +3,9 @@ package net.vvxzv.maidforge.utils;
 import net.dries007.tfc.common.capabilities.forge.ForgeRule;
 import net.dries007.tfc.common.capabilities.forge.ForgeStep;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ForgeUtil {
@@ -51,49 +53,57 @@ public class ForgeUtil {
             this.type = lastForgeType;
             this.step = step;
         }
+    }
 
-        public static ForgeStep[] autoLastSteps(ForgeRule[] rules){
-            ForgeStep[] lastSteps = new ForgeStep[]{null, null, null};
-            for(ForgeRule rule : rules) {
-                AdjustedForgeRule adjustedRule = AdjustedForgeRule.valueOf(rule.ordinal());
-                switch (adjustedRule.type) {
-                    case "third_last":
-                        lastSteps[2] = adjustedRule.step;
-                        break;
-                    case "second_last":
-                        lastSteps[1] = adjustedRule.step;
-                        break;
-                    case "last":
-                        lastSteps[0] = adjustedRule.step;
-                        break;
-                    case "any":
-                        anyLastSteps(lastSteps, adjustedRule.step);
-                        break;
-                    case "not_last":
-                        notLastLastSteps(rules, lastSteps, adjustedRule.step);
-                        break;
-                }
-            }
-            return lastSteps;
-        }
-
-        private static void notLastLastSteps(ForgeRule[] rules, ForgeStep[] lastSteps, ForgeStep step) {
-            if (lastSteps[2] == null && rules.length > 2) {
-                lastSteps[2] = step;
-            }
-            else if (lastSteps[1] == null && rules.length > 1) {
-                lastSteps[1] = step;
+    public static ForgeStep[] sortLastSteps(ForgeRule[] rules){
+        ForgeStep[] lastSteps = new ForgeStep[]{null, null, null};
+        List<ForgeRule> pool = new ArrayList<>();
+        for (ForgeRule rule : rules) {
+            AdjustedForgeRule adjustedRule = AdjustedForgeRule.valueOf(rule.ordinal());
+            switch (adjustedRule.type) {
+                case "third_last":
+                    lastSteps[2] = adjustedRule.step;
+                    break;
+                case "second_last":
+                    lastSteps[1] = adjustedRule.step;
+                    break;
+                case "last":
+                    lastSteps[0] = adjustedRule.step;
+                    break;
+                default: pool.add(rule);
             }
         }
 
-        private static void anyLastSteps(ForgeStep[] lastSteps, ForgeStep step) {
-            if (lastSteps[0] == null) {
-                lastSteps[0] = step;
-            } else if (lastSteps[1] == null) {
-                lastSteps[1] = step;
-            } else if (lastSteps[2] == null) {
-                lastSteps[2] = step;
+        for (ForgeRule rule: pool) {
+            AdjustedForgeRule adjustedRule = AdjustedForgeRule.valueOf(rule.ordinal());
+            switch (adjustedRule.type) {
+                case "any":
+                    anyRule(lastSteps, adjustedRule.step);
+                    break;
+                case "not_last":
+                    notRule(lastSteps, adjustedRule.step);
+                    break;
             }
+        }
+
+        return lastSteps;
+    }
+
+    private static void notRule(ForgeStep[] lastSteps, ForgeStep step) {
+        if (lastSteps[2] == null) {
+            lastSteps[2] = step;
+        } else if (lastSteps[1] == null) {
+            lastSteps[1] = step;
+        }
+    }
+
+    private static void anyRule(ForgeStep[] lastSteps, ForgeStep step) {
+        if (lastSteps[0] == null) {
+            lastSteps[0] = step;
+        } else if (lastSteps[1] == null) {
+            lastSteps[1] = step;
+        } else if (lastSteps[2] == null) {
+            lastSteps[2] = step;
         }
     }
 
