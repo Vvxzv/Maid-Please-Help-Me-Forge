@@ -114,7 +114,7 @@ public class AnvilForgeBehavior extends MaidCheckRateTask {
         entityMaid.swing(InteractionHand.MAIN_HAND);
 
         List<ForgeRule> rules = recipe.getRules();
-        ForgeStep[] lastSteps = ForgeUtil.AdjustedForgeRule.autoLastSteps(rules);
+        ForgeStep[] lastSteps = ForgeUtil.sortLastSteps(rules);
 
         int last = getStepValue(lastSteps, 0);
         int secondLast = getStepValue(lastSteps, 1);
